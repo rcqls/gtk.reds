@@ -860,6 +860,10 @@ GList!: alias struct! [
 			width		[integer!]
 			height		[integer!]
 		]
+		gtk_window_set_resizable: "gtk_window_set_resizable" [
+			window		[handle!]
+			mode			[logic!]
+		]
 		gtk_window_move: "gtk_window_move" [
 			window		[handle!]
 			x			[integer!]
