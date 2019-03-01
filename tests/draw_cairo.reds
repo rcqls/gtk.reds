@@ -1,7 +1,7 @@
 Red/System[]
 
 #include %../gtk3.reds
-#include %../tests/draw_cairo_tests.reds
+#include %draw_cairo_tests.reds
 
 do-draw: func [
    dc   [draw-ctx!]

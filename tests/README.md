@@ -1,6 +1,8 @@
 ## Test
 
-### Adding a test
+The goal is here to provide some tools very similar of the `gtk3/draw.reds` used in the `red/GTK` branch. The compilation time is 1 seconde when it lasts  1 minute for compiling `console-view.red`. This make easier to develop the `red/GTK` branch. 
+
+### Adding a test for draw dialect (with cairo) 
 
 Inside `tests/draw_cairo_tests.reds`, add the test function and declare it as follows for the particular case of "box":
 
@@ -18,15 +20,15 @@ id-draw-test "box" as integer! :draw-test-box
 
 ### Use it 
 
-First compile `examples/do_draw.reds` for linux (and from macOS for me):
+First compile `tests/draw_cairo.reds` for linux (and from macOS for me):
 ```
-red -c -t Linux -o ~/.RedGTK/do_draw  do_draw.reds
+red -c -t Linux -o ~/.RedGTK/draw_cairo  draw_cairo.reds
 ```
 
 inside docker (after executing `docker-red`):
 
 ```
-.RedGTK/do_draw box
+.RedGTK/draw_cairo box
 ```
 
 `box` can then be replaced with any other declared id associated to a draw test function.
