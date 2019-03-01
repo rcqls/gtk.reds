@@ -5,3 +5,4 @@ Red/System[]
 #include %include/gtk3.reds
 #include %include/gdk-pixbuf.reds
 #include %include/draw.reds
+#include %include/red-variadic.reds

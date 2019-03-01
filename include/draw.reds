@@ -170,17 +170,22 @@ OS-draw-anti-alias: func [
 ; 	do-paint dc
 ; ]
 
-CR-draw-line: func [
+OS-draw-line-variadic: func [
   [variadic]
   count [integer!] list [int-ptr!]
+  /local
+	dc 		[draw-ctx!]
+	x		[integer!]
+	y		[integer!]
 ][
-  
+  dc: as draw-ctx! R/h? :count list 
   until [
-      print [list/value lf]
-      list: list + 1
-      count: count - 1
+	  x: -1 y: -1
+	  R/p? :count list :x :y
+	  cairo_line_to dc/raw as float! x as-float y
       zero? count
   ]
+  do-paint dc
 ]
 
 OS-draw-pen: func [
@@ -225,7 +230,7 @@ OS-draw-fill-pen: func [
 ; 	]
 ; ]
 
-CR-draw-line-width: func [
+OS2-draw-line-width: func [
 	dc	[draw-ctx!]
 	w 	[float!]
 ][
@@ -262,7 +267,7 @@ CR-draw-line-width: func [
 ; 	]
 ; ]
 
-CR-draw-box: func [
+OS2-draw-box: func [
 	dc	  [draw-ctx!]
 	rad		[integer!]
 	x_up	[float!]
@@ -296,7 +301,7 @@ CR-draw-box: func [
 ; 	do-paint dc
 ; ]
 
-CR-draw-triangle: func [
+OS2-draw-triangle: func [
 	dc	[draw-ctx!]
 	x1	[float!] y1	[float!] x2	[float!] y2	[float!] x3	[float!] y3	[float!]
 ][

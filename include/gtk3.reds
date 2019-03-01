@@ -599,6 +599,11 @@ GList!: alias struct! [
 			[variadic]
 			return:	[c-string!]
 		]
+		g_strcmp0: "g_strcmp0" [
+			str			[c-string!]
+			str2		[c-string!]
+			return: [integer!]
+		]
 		g_free: "g_free" [
 			ptr		[handle!]
 		]

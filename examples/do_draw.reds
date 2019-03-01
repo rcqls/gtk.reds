@@ -11,7 +11,7 @@ do-draw: func [
 ][
   cr: dc/raw
   
-  draw-test?  dc id-draw-simple
+  draw-test?  dc id-draw-test?
 
 ]
 
