@@ -2,6 +2,7 @@ Red/System[]
 
 #include %draw_tests_tool.reds
 
+;==== box
 draw-test-box: func [
 	dc	[draw-ctx!]
 ][
@@ -9,9 +10,9 @@ draw-test-box: func [
 	OS-draw-pen dc rgba-to-int 0 255 0 0 no no
 	OS2-draw-box dc -1 10.0 10.0 100.0 100.0
 ]
+id-draw-test "box" as integer! :draw-test-box 
 
-id-draw-test "box" draw-test as integer! :draw-test-box 
-
+;==== triangle
 draw-test-triangle: func [
 	dc	[draw-ctx!]
 ][
@@ -19,5 +20,4 @@ draw-test-triangle: func [
 	OS-draw-pen dc rgba-to-int 255 0 0 0 no no
 	OS2-draw-triangle dc 10.0 10.0 100.0 100.0 50.0 10.0
 ]
-
-id-draw-test "triangle" draw-test as integer! :draw-test-triangle 
+id-draw-test "triangle" as integer! :draw-test-triangle 

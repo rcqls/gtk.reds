@@ -32,8 +32,11 @@ choice-tests-draw: 0 ; default
 
 id-draw-test: func [
 	item	[c-string!]
-	id		[integer!]
+	test	[integer!]
+	/local
+		id		[integer!]
 ][
+	id: draw-test test
     if all[not null? args  0 = g_strcmp0 args/item item ] [
     	choice-tests-draw: id
   	]
