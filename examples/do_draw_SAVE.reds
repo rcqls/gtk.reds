@@ -6,19 +6,10 @@ do-draw: func [
    dc   [draw-ctx!]
    /local
       color   [integer!]
-      cr      [handle!]
 ][
-  cr: dc/raw
-  OS-draw-fill-pen dc rgba-to-int 255 0 0 128  no no
-  OS-draw-pen dc rgba-to-int 0 255 0 0 no no
-  CR-draw-box dc -1 10.0 10.0 100.0 100.0
-
-  ;cairo_set_source_rgba dc/raw 1.0 0.0 0.0 0.5
-  ; set-source-color cr rgba-to-int 255 0 0 128
-  ; cairo_paint cr
-  ; cairo_set_source_rgba dc/raw 0.0 1.0 0.0 1.0
-  ; cairo_rectangle dc/raw  10.0 10.0 100.0 100.0
-  ; cairo_stroke dc/raw
+  color: rgba-to-int 255 0 0 0
+  OS-draw-fill-pen dc color  no no
+  do-paint dc
 ]
 
 draw_cb: func [

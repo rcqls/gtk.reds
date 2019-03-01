@@ -25,6 +25,38 @@ draw-ctx!: alias struct! [
 
 draw-state!: alias struct! [mat [handle!]]
 
+rgba-to-int: func [
+	r			[integer!]
+	g			[integer!]
+	b			[integer!]
+	a			[integer!]
+	return:		[integer!]
+	/local
+		color		[integer!]
+][
+	color: (a << 24 and FF000000h) or (b << 16  and 00FF0000h) or ( g << 8 and FF00h) or ( r and FFh)
+	;; DEBUG: 
+	print ["color: " color " " r "." g "." b "." a lf ]
+	int-to-rgba color :r :b :g :a
+	color
+]
+
+int-to-rgba: func [
+	color		[integer!]
+	r			[int-ptr!]
+	b			[int-ptr!]
+	g			[int-ptr!]
+	a			[int-ptr!]
+][
+	;; TODO:
+	a/value: (color >> 24 and FFh)
+	g/value: (color >> 16 and FFh)
+	b/value: (color >> 8 and FFh)
+	r/value: (color  and FFh)
+	;; DEBUG: 
+	print ["color: " color " " r/value "." g/value "." b/value "." a/value lf ]
+]
+
 set-source-color: func [
 	cr			[handle!]
 	color		[integer!]
@@ -54,7 +86,7 @@ init-draw-ctx: func [
 	ctx/raw:			cr
 	ctx/pen-width:		1.0
 	ctx/pen-style:		0
-	ctx/pen-color:		0						;-- default: black
+	ctx/pen-color:		255						;-- default: black
 	;ctx/pen-join:		miter
 	;ctx/pen-cap:		flat
 	ctx/brush-color:	0
@@ -82,7 +114,7 @@ draw-begin: func [
 	init-draw-ctx ctx cr
 
 	cairo_set_line_width cr 1.0
-	set-source-color cr 0
+	set-source-color cr 55555555
 	ctx
 ]
 
@@ -113,6 +145,7 @@ do-paint: func [dc [draw-ctx!] /local cr [handle!]][
 		]
 		cairo_restore cr
 	]
+	print ["dc/pen? " dc/pen? lf]
 	if dc/pen? [
 		cairo_stroke cr
 	]
