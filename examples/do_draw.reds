@@ -1,6 +1,7 @@
 Red/System[]
 
 #include %../gtk3.reds
+#include %../tests/draw_cairo_tests.reds
 
 do-draw: func [
    dc   [draw-ctx!]
@@ -9,16 +10,9 @@ do-draw: func [
       cr      [handle!]
 ][
   cr: dc/raw
-  OS-draw-fill-pen dc rgba-to-int 255 0 0 128  no no
-  OS-draw-pen dc rgba-to-int 0 255 0 0 no no
-  CR-draw-box dc -1 10.0 10.0 100.0 100.0
+  
+  draw-test?  dc id-draw-simple
 
-  ;cairo_set_source_rgba dc/raw 1.0 0.0 0.0 0.5
-  ; set-source-color cr rgba-to-int 255 0 0 128
-  ; cairo_paint cr
-  ; cairo_set_source_rgba dc/raw 0.0 1.0 0.0 1.0
-  ; cairo_rectangle dc/raw  10.0 10.0 100.0 100.0
-  ; cairo_stroke dc/raw
 ]
 
 draw_cb: func [
