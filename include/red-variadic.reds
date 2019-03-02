@@ -2,7 +2,7 @@ Red/System[]
 
 R: context [ ; for red-value! replaced by variadic
 	#enum red-variadic! [
-		i f p h
+		i f h l
 	]
 
 	i?: func [
@@ -11,46 +11,32 @@ R: context [ ; for red-value! replaced by variadic
 		/local
 			val		[integer!]
 	][
-		count/value: count/value - 1
-		val: list/value
-		list: list + 1
-		val
+		unless null? count [count/value: count/value - 1]
+		list/value
 	]
 
 	f?: func [
 		count 	[int-ptr!] list [int-ptr!]
 		return:	[float!]
-		/local
-			val  [float!]
 	][
-		count/value: count/value - 1
-		val: as float! list/value
-		list: list + 1
-		val
+		unless null? count [count/value: count/value - 1]
+		as float! list/value
 	]
 
 	h?: func [
 		count	[int-ptr!] list [int-ptr!]
 		return:	[handle!]
-		/local
-			val		[handle!]
 	][
-		count/value: count/value - 1
-		val: as handle! list/value
-		list: list + 1
-		val
+		unless null? count [count/value: count/value - 1]
+		as handle! list/value
 	]
 
-	p?: func [
+	l?: func [
 		count	[int-ptr!] list [int-ptr!]
-		val1	[int-ptr!] val2	[int-ptr!]
+		return:	[logic!]
 	][
-		count/value: count/value - 1
-		val1/value: list/value
-		list: list + 1
-		count/value: count/value - 1
-		val2/value:  list/value
-		list: list + 1
+		unless null? count [count/value: count/value - 1]
+		as logic! list/value
 	]
 
 ]

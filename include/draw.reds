@@ -170,7 +170,7 @@ OS-draw-anti-alias: func [
 ; 	do-paint dc
 ; ]
 
-OS-draw-line-variadic: func [
+OS2-draw-line: func [
   [variadic]
   count [integer!] list [int-ptr!]
   /local
@@ -178,12 +178,13 @@ OS-draw-line-variadic: func [
 	x		[integer!]
 	y		[integer!]
 ][
-  dc: as draw-ctx! R/h? :count list 
+  dc: as draw-ctx! R/h? :count list list: list + 1 
   until [
-	  x: -1 y: -1
-	  R/p? :count list :x :y
-	  cairo_line_to dc/raw as float! x as-float y
-      zero? count
+	x: R/i? :count list list: list + 1
+	y: R/i? :count list list: list + 1
+	;;print ["line: count=" count " at "x "x" y lf ]
+	cairo_line_to dc/raw as float! x as float! y
+	zero? count
   ]
   do-paint dc
 ]
@@ -326,59 +327,59 @@ OS2-draw-triangle: func [
 ; 	do-paint dc
 ; ]
 
-OS-draw-polygon: func [                      ;-- native function
+OS2-draw-polygon: func [                      ;-- native function
   [variadic]
   count [integer!] list [int-ptr!]
+  /local
+	dc 		[draw-ctx!]
+	x		[integer!]
+	y		[integer!]
 ][
-	 
+  dc: as draw-ctx! R/h? :count list list: list + 1 
   until [
-      print [list/value lf]
-      list: list + 1
-      count: count - 1
-      zero? count
+	x: R/i? :count list list: list + 1
+	y: R/i? :count list list: list + 1
+	;;print ["line: count=" count " at "x "x" y lf ]
+	cairo_line_to dc/raw as float! x as float! y
+	zero? count
   ]
-	; until [
-	; 	cairo_line_to dc/raw as-float start/x as-float start/y
-	; 	start: start + 1
-	; 	start > end
-	; ]
-	; cairo_close_path dc/raw
-	; do-paint dc
+  cairo_close_path dc/raw
+  do-paint dc
 ]
 
-; spline-delta: 1.0 / 25.0
+spline-delta: 1.0 / 25.0
 
-; do-spline-step: func [
-; 	ctx		[handle!]
-; 	p0		[red-pair!]
-; 	p1		[red-pair!]
-; 	p2		[red-pair!]
-; 	p3		[red-pair!]
-; 	/local
-; 		t		[float!]
-; 		t2		[float!]
-; 		t3		[float!]
-; 		x		[float!]
-; 		y		[float!]
-; ][
-; 		t: 0.0
-; 		loop 25 [
-; 			t: t + spline-delta
-; 			t2: t * t
-; 			t3: t2 * t
+do-spline-step: func [
+	ctx		[handle!]
+	p0_x	[float!] p0_y [float!]
+	p1_x	[float!] p1_y [float!]
+	p2_x	[float!] p2_y [float!]
+	p3_x	[float!] p3_y [float!]
+	/local
+		t		[float!]
+		t2		[float!]
+		t3		[float!]
+		x		[float!]
+		y		[float!]
+][
+		t: 0.0
+		loop 25 [
+			t: t + spline-delta
+			t2: t * t
+			t3: t2 * t
 			
-; 			x:
-; 			   2.0 * (as-float p1/x) + ((as-float p2/x) - (as-float p0/x) * t) +
-; 			   ((2.0 * (as-float p0/x) - (5.0 * (as-float p1/x)) + (4.0 * (as-float p2/x)) - (as-float p3/x)) * t2) +
-; 			   (3.0 * ((as-float p1/x) - (as-float p2/x)) + (as-float p3/x) - (as-float p0/x) * t3) * 0.5
-; 			y:
-; 			   2.0 * (as-float p1/y) + ((as-float p2/y) - (as-float p0/y) * t) +
-; 			   ((2.0 * (as-float p0/y) - (5.0 * (as-float p1/y)) + (4.0 * (as-float p2/y)) - (as-float p3/y)) * t2) +
-; 			   (3.0 * ((as-float p1/y) - (as-float p2/y)) + (as-float p3/y) - (as-float p0/y) * t3) * 0.5
+			x:
+			   2.0 * p1_x + (( p2_x - p0_x) * t) +
+			   ((2.0 * p0_x - (5.0 * p1_x) + (4.0 * p2_x) - p3_x) * t2) +
+			   (3.0 * (p1_x - p2_x) + p3_x - p0_x * t3) * 0.5
+			y:
+			   2.0 * p1_y + (( p2_y - p0_y) * t) +
+			   ((2.0 * p0_y - (5.0 * p1_y) + (4.0 * p2_y) - p3_y) * t2) +
+			   (3.0 * (p1_y - p2_y) + p3_y - p0_y * t3) * 0.5
 
-; 			cairo_line_to ctx x y
-; 		]
-; ]
+			cairo_line_to ctx x y
+		]
+]
 
 ; OS-draw-spline: func [
 ; 	dc		[draw-ctx!]
@@ -445,6 +446,83 @@ OS-draw-polygon: func [                      ;-- native function
 
 ; 	do-paint dc
 ; ]
+
+OS2-draw-spline: func [
+	[variadic]
+	n [integer!] l [int-ptr!]
+	/local
+		dc		[draw-ctx!]
+		ctx		[handle!]
+		p1_x	[integer!] p1_y		[integer!]
+		p2_x	[integer!] p2_y		[integer!]
+		p3_x	[integer!] p3_y		[integer!]
+		stop_x	[integer!] stop_y 	[integer!]
+		pos		[integer!]
+		closed? [logic!]
+][
+	dc: as draw-ctx! R/h? :n l l: l + 1
+	if n = 4 [		;-- two points input
+		p1_x:  R/i? :n l l: l + 1
+		p1_y:  R/i? :n l l: l + 1
+		stop_x: R/i? :n l l: l + 1
+		stop_y: R/i? :n l l: l + 1
+		OS2-draw-line [dc p1_x p1_y stop_x stop_y]				;-- draw a line
+		exit
+	]
+
+	closed?: R/l? null l + n n: n - 1
+
+	ctx: dc/raw
+
+	; either closed? [
+
+	; 	do-spline-step ctx
+	; 		end
+	; 		start
+	; 		start + 1
+	; 		start + 2
+	; ][
+	; 	do-spline-step ctx 
+	; 		start
+	; 		start
+	; 		start + 1
+	; 		start + 2
+	; ]
+	
+	; point: start
+	; stop: end - 3
+
+	; while [point <= stop] [
+	; 	do-spline-step ctx
+	; 		point
+	; 		point + 1
+	; 		point + 2
+	; 		point + 3
+	; 	point: point + 1
+	; ]
+
+	; either closed? [
+	; 	do-spline-step ctx
+	; 		end - 2
+	; 		end - 1
+	; 		end
+	; 		start
+	; 	do-spline-step ctx
+	; 		end - 1
+	; 		end
+	; 		start
+	; 		start + 1
+	; 	cairo_close_path ctx 
+	; ][
+	; 	do-spline-step ctx
+	; 		end - 2
+	; 		end - 1
+	; 		end
+	; 		end
+	; ]
+
+	do-paint dc
+]
 
 ; OS-draw-circle: func [
 ; 	dc	   [draw-ctx!]
