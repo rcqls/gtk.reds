@@ -575,6 +575,85 @@ OS2-draw-spline: func [
 ; 	do-paint dc
 ; ]
 
+; do-draw-ellipse: func [
+; 	dc		[draw-ctx!]
+; 	x		[float!]
+; 	y		[float!]
+; 	w		[float!]
+; 	h		[float!]
+; 	/local
+; 		dx	[float!]
+; 		dy	[float!]
+; ][
+; 	CGContextAddEllipseInRect dc/raw x y w h
+; 	if dc/grad-pos? [
+; 		either dc/grad-type = linear [
+; 			dc/grad-x1: x
+; 			dc/grad-x2: x + w
+; 			dc/grad-y1: y
+; 			dc/grad-y2: y
+; 		][
+; 			dx: w / as float32! 2.0
+; 			dy: h / as float32! 2.0
+; 			dc/grad-x1: x + dx			;-- center point
+; 			dc/grad-y1: y + dy
+; 			dc/grad-x2: dc/grad-x1
+; 			dc/grad-y2: dc/grad-y1
+; 			dc/grad-radius: either dx > dy [dx][dy]
+; 		]
+; 	]
+; 	do-draw-path dc
+; ]
+
+OS2-draw-circle: func [
+	dc	   [draw-ctx!]
+	center-x [integer!] center-y [integer!]
+	rad-x [integer!] rad-y [integer!]
+	int?	[logic!]
+	/local
+		ctx   [handle!]
+		w	  [float!]
+		h	  [float!]
+		f	  [float!]
+][
+	ctx: dc/raw
+
+	either int? [
+		if rad-y = -1 [					;-- center, radius
+			rad-y: rad-x
+		]
+		w: as float! rad-x * 2
+		h: as float! rad-y * 2
+	][
+		either rad-y = -1 [
+			rad-x: rad-x + 0.75
+			rad-y: rad-x
+			w: 2.0 * as float! rad-x
+			h: w
+		][
+			rad-y: rad-y + 0.75
+			h: 2.0 as float! rad-y
+			rad-x: rad-x + 0.75
+			w: 2.0  * as float! rad-x
+		]
+	]
+
+	cairo_save ctx
+	cairo_translate ctx as-float center-x
+						as-float center-y
+	cairo_scale ctx as-float rad-x
+					as-float rad-y
+	cairo_arc ctx 0.0 0.0 1.0 0.0 2.0 * pi
+	cairo_restore ctx
+	do-paint dc
+
+	; cairo_save (cr);
+	; cairo_translate (cr, x + width / 2., y + height / 2.);
+	; cairo_scale (cr, width / 2., height / 2.);
+	; cairo_arc (cr, 0., 0., 1., 0., 2 * M_PI);
+	; cairo_restore (cr);
+]
+
 ; OS-draw-ellipse: func [
 ; 	dc		 [draw-ctx!]
 ; 	upper	 [red-pair!]
@@ -597,6 +676,29 @@ OS2-draw-spline: func [
 ; 	cairo_restore ctx
 ; 	do-paint dc
 ; ]
+
+OS2-draw-ellipse: func [
+	dc		 [draw-ctx!]
+	upper-x	[integer!] upper-y	[integer!]
+	diam-x 	[integer!] diam-y 	[integer!]
+	/local
+		ctx   [handle!]
+		rad-x [integer!]
+		rad-y [integer!]
+][
+	ctx: dc/raw
+	rad-x: diam-x / 2
+	rad-y: diam-y / 2
+
+	cairo_save ctx
+	cairo_translate ctx as-float upper-x + rad-x
+						as-float upper-y + rad-y
+	cairo_scale ctx as-float rad-x
+					as-float rad-y
+	cairo_arc ctx 0.0 0.0 1.0 0.0 2.0 * pi
+	cairo_restore ctx
+	do-paint dc
+]
 
 ; ;;; TODO: Remove this when pango-cairo is the only choice! SOON!
 ; ; pango-font?: yes ; switch to yes to switch to pango-cairo instead of toy cairo
@@ -789,6 +891,56 @@ OS2-draw-spline: func [
 ; 	ctx: dc/raw
 ; 	cx: as float! center/x
 ; 	cy: as float! center/y
+; 	rad: PI / 180.0
+
+; 	radius: center + 1
+; 	rad-x: as float! radius/x
+; 	rad-y: as float! radius/y
+; 	begin: as red-integer! radius + 1
+; 	angle-begin: rad * as float! begin/value
+; 	angle: begin + 1
+; 	sweep: angle/value
+; 	i: begin/value + sweep
+; 	angle-end: rad * as float! i
+
+; 	closed?: angle < end
+
+; 	cairo_save ctx
+; 	unless closed? [dc/brush?: no]
+; 	cairo_translate ctx cx    cy
+; 	cairo_scale     ctx rad-x rad-y
+; 	cairo_arc_negative ctx 0.0 0.0 1.0 angle-begin angle-end
+; 	if closed? [
+; 		cairo_line_to ctx 0.0 0.0
+; 		cairo_close_path ctx
+; 	]
+; 	cairo_restore ctx
+; 	do-paint dc
+; ]
+
+; OS2-draw-arc: func [
+; 	dc	   [draw-ctx!]
+; 	center-x [integer!] center-y [integer!] 
+; 	end-x	 [integer!] end-y	 [integer!]
+; 	/local
+; 		ctx			[handle!]
+; 		;rad-x		[integer!] rad-y		[integer!]
+; 		angle		[integer!]
+; 		begin		[integer!]
+; 		cx			[float!]
+; 		cy			[float!]
+; 		rad-x		[float!]
+; 		rad-y		[float!]
+; 		angle-begin [float!]
+; 		angle-end	[float!]
+; 		rad			[float!]
+; 		sweep		[integer!]
+; 		i			[integer!]
+; 		closed?		[logic!]
+; ][
+; 	ctx: dc/raw
+; 	cx: as float! center-x
+; 	cy: as float! center-y
 ; 	rad: PI / 180.0
 
 ; 	radius: center + 1

@@ -1,6 +1,6 @@
 Red/System[]
 
-#include %../gtk3.reds
+#include %../../gtk3.reds
 #include %draw_cairo_tests.reds
 
 do-draw: func [

@@ -1,6 +1,6 @@
 Red/System[]
 
-#include %../include/tests_tool.reds
+#include %../../include/tests_tool.reds
 
 ;============= Draw Tests Tools ===============
 
