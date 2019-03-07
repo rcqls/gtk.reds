@@ -1,6 +1,8 @@
 Red/System[]
 
 #include %../../gtk3.reds
+#include %../../include/quick-demo.reds
+
 #include %draw_cairo_tests.reds
 
 do-draw: func [
@@ -33,25 +35,14 @@ draw_cb: func [
   yes
 ]
 
-destroy: func[[cdecl]][
-  gtk_main_quit
-]
+demo/begin
 
-window: as handle! 0
-frame: as handle! 0
-width: 800 height: 600
+gtk_window_set_title  demo/window "Pixbufs"
+gtk_window_set_resizable demo/window  no
 
-gtk_init null null
-window: gtk_window_new 0
-gtk_window_set_title  window "Pixbufs"
-gtk_window_set_resizable window  no
-gobj_signal_connect (window "destroy" :destroy null)
-
-gtk_widget_set_size_request window width height
-frame: gdk_pixbuf_new 0 no 8 width  height
+frame: gdk_pixbuf_new 0 no 8 demo/width demo/height
 da:  gtk_drawing_area_new
 gobj_signal_connect (da "draw" :draw_cb null)
-gtk_container_add window  da
+gtk_container_add demo/window  da
 
-gtk_widget_show_all window
-gtk_main
+demo/end

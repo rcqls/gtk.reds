@@ -1755,6 +1755,8 @@ GList!: alias struct! [
 			return:		[handle!]
 		]
 
+		
+
 		gtk_widget_get_pango_context: "gtk_widget_get_pango_context" [
 			return:		[handle!]
 		]
@@ -2134,7 +2136,13 @@ GList!: alias struct! [
 			layout_line [handle!]
 		]
 		pango_cairo_context_set_font_options: "pango_cairo_context_set_font_options" [
-
+			cr 			[handle!]
+			opts		[handle!]
+		]
+		pango_context_load_font: "pango_context_load_font" [
+			context		[handle!]
+			fd				[handle!]
+			return: 	[handle!]
 		]
 		pango_font_map_create_context: "pango_font_map_create_context" [
 			fontmap		[handle!]
