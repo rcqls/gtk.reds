@@ -1,7 +1,5 @@
 Red/System[]
 
-#include %../../gtk3.reds
-#include %../../include/quick-demo.reds
 #include %../../include/widgets.reds
 
 hello: func[[cdecl] widget [handle!]/local w [integer!] h [integer!]] [
@@ -12,11 +10,18 @@ hello: func[[cdecl] widget [handle!]/local w [integer!] h [integer!]] [
 
 demo/begin
 
-win: new-face window null "test" 0 0 400 300 yes yes 0
-pan: new-face panel win "panel" 100 100 500 200 yes yes 0
-but: new-face button pan "Hello World" 0 0 120 40 yes yes 0
-but2: new-face button pan "Hello World2" 130 0 120 40 yes yes 0
-but3: new-face button pan "Hello World3" 260 0 120 40 yes yes 0
+win: new-face window null "test" 0 0 400 300 
+pan: new-face panel win "panel" 100 100 500 200 
+but: new-face button pan "Hello World" 0 0 120 40 
+but2: new-face button pan "Hello World2" 130 0 120 40 
+but3: new-face button pan "Hello World3" 260 0 120 40
+tl: new-face text-list pan "text-list" 0 60 60 80
+data? [tl "toto" "titi"]
+dl: new-face drop-list pan "drop-list" 100 60 100 30 
+data? [dl "toto" "titi"]
+dd: new-face drop-down pan "drop-down" 180 60 100 30 
+data? [dd "toto" "titi"]
+
 
 gobj_signal_connect(but/widget "clicked" :hello  null)
 gobj_signal_connect(but2/widget "clicked" :hello  null)

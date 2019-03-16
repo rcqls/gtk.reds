@@ -1,13 +1,16 @@
 Red/System[]
 
-GTKApp:			as handle! 0
-GTKApp-Ctx: 	0
-exit-loop:		0
+#include %../gtk3.reds
+#include %quick-demo.reds
+
+; GTKApp:			as handle! 0
+; GTKApp-Ctx: 	0
+; exit-loop:		0
 
 ;;;close-window?:	no
 ;;;win-array:		declare red-vector!
-win-cnt:		0
-AppMainMenu:	as handle! 0
+; win-cnt:		0
+; AppMainMenu:	as handle! 0
 
 _widget-id:			1
 gtk-layout-id:		2
@@ -29,23 +32,12 @@ tabs: context [
 ]
 
 #enum WidgetType! [
-	window
-	base
-	button
-	text
-	panel
-	tab-panel
-	field
-	text-list
-	group-box
-	area
-	rich-text
-	drop-list
-	drop-down
-	check
-	radio
-	slider
-	progress
+	window	base panel tab-panel group-box
+	button	text field
+	area rich-text
+	text-list drop-list drop-down
+	check radio
+	slider progress
 	camera
 ]
 
@@ -67,9 +59,6 @@ new-face: func [
 	caption	[c-string!]
 	offset-x [integer!] offset-y [integer!]
 	size-x [integer!] size-y [integer!]
-	show?	  [logic!]
-	enabled?  [logic!]
-	selected  [integer!]
 	return: [WidgetFace!]
 	/local
 		face 	[WidgetFace!]
@@ -79,9 +68,6 @@ new-face: func [
 	face/caption: caption
 	face/offset-x: offset-x face/offset-y: offset-y
 	face/size-x: size-x face/size-y: size-y
-	face/show?: show?
-	face/enabled?: enabled?
-	face/selected: selected
 	face/parent: parent
 	face/widget: make-view face parent
 	face
@@ -349,15 +335,15 @@ make-view: func [
 			;;; gobj_signal_connect(widget "selected-rows-changed" :text-list-selected-rows-changed face)
 			; connect-common-events widget face actors sym 
 		]
-		; any [
-		; 	sym = drop-list
-		; 	sym = drop-down
-		; ][
-		; 	widget: either sym = drop-list [gtk_combo_box_text_new][gtk_combo_box_text_new_with_entry]
-		; 	init-combo-box widget data caption sym = drop-list
-		; 	gtk_combo_box_set_active widget 0
-		; 	gobj_signal_connect(widget "changed" :combo-selection-changed face/ctx)
-		; ]
+		any [
+			sym = drop-list
+			sym = drop-down
+		][
+			widget: either sym = drop-list [gtk_combo_box_text_new][gtk_combo_box_text_new_with_entry]
+			;;;init-combo-box widget data caption sym = drop-list
+			gtk_combo_box_set_active widget 0
+			;;;gobj_signal_connect(widget "changed" :combo-selection-changed face/ctx)
+		]
 		true [
 			;-- search in user-defined classes
 			;fire [TO_ERROR(script face-type) type]
@@ -467,3 +453,46 @@ make-view: func [
 	; stack/unwind
 	widget
 ]
+
+data?: func [
+	[variadic]
+	count [integer!] list [int-ptr!]
+	/local
+		face	[WidgetFace!]
+		val	 	[c-string!]
+		type 	[WidgetType!]
+		widget	[handle!]
+		label	[handle!]
+][
+	face: as WidgetFace! R/h? :count list list: list + 1
+	type: face/type widget: face/widget
+	case [
+		any[type = drop-list type = drop-down][
+			gtk_combo_box_text_remove_all widget
+			until [
+				val: R/s? :count list list: list + 1
+				gtk_combo_box_text_append_text widget val
+				zero? count
+			]
+		]
+		type = text-list [
+			until [
+				val: R/s? :count list list: list + 1
+				label: gtk_label_new val
+				;; DEBUG: print ["Add elt: " val lf]
+				gtk_widget_set_halign label 1		;-- GTK_ALIGN_START
+				gtk_container_add widget label
+				zero? count
+			]
+		]
+	]
+]
+
+; ; remove-entry: func [
+; ; 	[cdecl]
+; ; 	widget		[handle!]
+; ; 	container	[int-ptr!]
+; ; ][
+; ; 	gtk_container_remove container widget
+; ; ]
+ 
