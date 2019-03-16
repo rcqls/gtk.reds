@@ -11,14 +11,14 @@ demo: context [
 
 	begin: does [
 		gtk_init null null
-		window:  gtk_window_new 0
-		gtk_widget_set_size_request window width height
-		gobj_signal_connect(window "destroy" :destroy null)
+		demo/window:  gtk_window_new 0
+		gtk_widget_set_size_request demo/window width height
+		gobj_signal_connect(demo/window "destroy" :destroy null)
 	
 	]
 
 	end: does [
-		gtk_widget_show_all window
+		gtk_widget_show_all demo/window
 		gtk_main
 	]
 ]

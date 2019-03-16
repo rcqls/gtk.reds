@@ -1,5 +1,69 @@
 Red/System []
 
+; #enum trigonometric-type! [
+;         TYPE_TANGENT
+;         TYPE_COSINE
+;         TYPE_SINE
+; ]
+
+; degree-to-radians: func [
+;         val             [float!]
+;         type    		[integer!]
+;         return: 		[float!]
+;         /local
+;                 factor [float!]
+; ][
+;         val: val % 360.0
+;         if any [val > 180.0 val < -180.0] [
+;                 factor: either val < 0.0 [360.0][-360.0]
+;                 val: val + factor
+;         ]
+;         if any [val > 90.0 val < -90.0] [
+;                 if type = TYPE_TANGENT [
+;                         factor: either val < 0.0 [180.0][-180.0]
+;                         val: val + factor
+;                 ]
+;                 if type = TYPE_SINE [
+;                         factor: either val < 0.0 [-180.0][180.0]
+;                         val: factor - val
+;                 ]
+;         ]
+;         val: val * PI / 180.0                   ;-- to radians
+;         val
+; ]
+
+abs: func [
+		value   [float!]
+		return: [float!]
+		/local
+				n       [int-ptr!]
+][
+		n: (as int-ptr! :value) + 1
+		n/value: n/value and 7FFFFFFFh
+		value
+]
+
+radian-to-degrees: func [
+	radians [float!]
+	return: [float!]
+][
+	(radians * 180.0) / PI
+]
+
+adjust-angle: func [
+	x		[float!]
+	y		[float!]
+	angle	[float!]
+	return:	[float!]
+][
+	case [
+		all [ x >= 0.0 y <= 0.0 ] [ either angle = 0.0 [0.0 - angle][360.0 - angle] ]
+		all [ x <= 0.0 y >= 0.0 ] [ 180.0 - angle ]
+		all [ x <= 0.0 y <= 0.0 ] [ 180.0 + angle ]
+		true [ angle ]
+	]
+]
+
 draw-ctx!: alias struct! [
 	raw				[int-ptr!]
 	pen-join		[integer!]
@@ -700,9 +764,6 @@ OS2-draw-ellipse: func [
 	do-paint dc
 ]
 
-; ;;; TODO: Remove this when pango-cairo is the only choice! SOON!
-; ; pango-font?: yes ; switch to yes to switch to pango-cairo instead of toy cairo
-
 ; OS-draw-font: func [
 ; 	dc		[draw-ctx!]
 ; 	font	[red-object!]
@@ -714,159 +775,52 @@ OS2-draw-ellipse: func [
 ; 	; ]
 ; ]
 
-; draw-text-at: func [
-; 	dc		[draw-ctx!]
-; 	text	[red-string!]
-; 	color	[integer!]
-; 	x		[integer!]
-; 	y		[integer!]
-; 	/local
-; 		len     [integer!]
-; 		str		[c-string!]
-; 		ctx 	[handle!]
-; 		pl		[handle!]
-; 		width	[integer!]
-; 		height	[integer!]
-; 		size	[integer!]
-; ][
-; 	ctx: dc/raw
+OS2-draw-font: func [
+	dc		[draw-ctx!]
+	fname    [c-string!] fsize	 [integer!] 
+	color	[integer!]
+	fweight  [integer!] fstyle   [integer!] underline? [logic!] strike?		[logic!]
+	quality  [integer!]
+][ 
+		make-pango-cairo-font dc fname fsize
+			color
+			fweight fstyle underline? strike?
+			quality
+]
 
-; 	len: -1
-; 	str: unicode/to-utf8 text :len
-; 	;; print ["draw-text-at: " str " at " x "x" y   lf]
-; 	; either pango-font? [
-; 		;; print ["draw-text-at: dc/layout: " dc/layout lf]
-; 		unless null? dc/layout [
-; 			;pango-cairo-set-text dc str
-; 			pango-layout-context-set-text dc/layout dc str
-; 			;; print ["pango-cairo-set-text: " dc " " str lf]
-; 			set-source-color ctx color
-; 			;; print ["set-source-color: " ctx " " color lf]
+OS2-draw-text: func [
+	dc		[draw-ctx!]
+	x	[integer!] y [integer!]
+	str		[c-string!]
+	return: [logic!]
+	/local
+		ctx 	[handle!]
+		pl		[handle!]
+		width	[integer!]
+		height	[integer!]
+		size	[integer!]
+][
+	ctx: dc/raw
+	print ["dc/layout: " dc/layout lf]
+	unless null? dc/layout [
+		pango-layout-context-set-text dc/layout dc str
+		set-source-color ctx dc/font-color
 
-; 			pango_cairo_update_layout ctx dc/layout
-						
-; 			size: 0
-; 			size: pango_font_description_get_size dc/font-desc
-; 			;; DEBUG: print ["pango_font_description_get_size: dc/font-desc: " dc/font-desc " size: " size lf]
-; 			cairo_move_to ctx as-float x
-; 			 				(as-float y) + ((as-float size) / PANGO_SCALE)
-; 			pl: pango_layout_get_line_readonly dc/layout 0
-; 			pango_cairo_show_layout_line ctx pl
-			
-; 			;pango_cairo_show_layout ctx dc/layout
+		pango_cairo_update_layout ctx dc/layout
+					
+		size: 0
+		size: pango_font_description_get_size dc/font-desc
+		cairo_move_to ctx as-float x
+						(as-float y) + ((as-float size) / PANGO_SCALE)
+		pl: pango_layout_get_line_readonly dc/layout 0
+		pango_cairo_show_layout_line ctx pl
 
-; 			do-paint dc
-; 		]
-; 	; ][
-; 	; 	cairo_move_to ctx as-float x
-; 	; 					(as-float y) + cairo-font-size
-
-; 	; 	set-source-color ctx color 
-; 	; 	cairo_show_text ctx str
-; 	; 	do-paint dc
-; 	; ]
-
-; ]
-
-; draw-text-box-lines: func [
-; 	dc 		[draw-ctx!]
-; 	line	[c-string!]
-; 	pos		[red-pair!]
-; 	size 	[red-pair!]
-; 	tbox 	[red-object!]
-; 	/local
-; 		lc 		[layout-ctx!]
-; 		ctx		[handle!]
-; 		clr		[integer!]
-; 		pl		[handle!]
-; 		width	[integer!]
-; 		height	[integer!]
-; 		sizef 	[float!]
-; 		gstr	[GString!]
-; 		irect	[tagRECT value]
-; 		lrect	[tagRECT value]
-; ][
-; 	ctx: dc/raw
-
-; 	clr: either null? dc [0][
-; 		;;TODO: objc_msgSend [dc/font-attrs sel_getUid "objectForKey:" NSForegroundColorAttributeName]
-; 		dc/font-color
-; 	]
-
-; 	lc: either TYPE_OF(tbox) = TYPE_OBJECT [	
-; 	 	;; DEBUG: print ["draw-text-box-lines: " as int-ptr! dc lf]			;-- text-box!
-; 	 	as layout-ctx! OS-text-box-layout tbox as int-ptr! dc clr yes
-; 	 ][
-; 	 	null
-; 	 ]
-
-; 	unless null? lc/layout [
-
-; 		pango-layout-set-text lc size
-
-; 		set-source-color ctx clr
-; 		;; DEBUG: print ["set-source-color: " ctx " " clr lf]
-		
-; 		cairo_move_to ctx as-float pos/x (as-float pos/y) ; + sizef
-; 		pango_cairo_show_layout ctx lc/layout
-
-; 		free-pango-cairo-font dc
-
-; 		;; DEBUG: print ["free pango"  lf]
-; 		do-paint dc
-; 	]
-; ]
+		do-paint dc
+	]
+	true
+]
 
 
-; draw-text-box: func [
-; 	dc		[draw-ctx!]
-; 	pos		[red-pair!]
-; 	tbox	[red-object!]
-; 	catch?	[logic!]
-; 	/local
-; 		values	[red-value!]
-; 		text	[red-string!]
-; 		lc		[layout-ctx!]
-; 		len		[integer!]
-; 		str		[c-string!]
-; 		size 	[red-pair!]
-; ][
-; 	;; DEBUG: print ["draw-text-box: " tbox lf]
-; 	values: object/get-values tbox
-; 	text: as red-string! values + FACE_OBJ_TEXT
-; 	if TYPE_OF(text) <> TYPE_STRING [exit]
-
-; 	size: as red-pair! values + FACE_OBJ_SIZE
-	
-; 	;; DEBUG: print ["pos : " pos/x "x" pos/y " size: " size/x "x" size/y lf]
-
-; 	len: -1
-; 	str: unicode/to-utf8 text :len
-
-; 	dc/font-desc: pango_font_description_from_string gtk-font
-; 	;;TORM: dc/layout: make-pango-cairo-layout dc/raw dc/font-desc
-	
-; 	;; DEBUG: print ["draw-text-box text: " str  " dc/font-desc: " dc/font-desc  lf]
-; 	draw-text-box-lines dc str pos size tbox
-; ]
-
-; OS-draw-text: func [
-; 	dc		[draw-ctx!]
-; 	pos		[red-pair!]
-; 	text	[red-string!]
-; 	catch?	[logic!]
-; 	return: [logic!]
-; ][
-; 	either TYPE_OF(text) = TYPE_STRING [
-; 		draw-text-at dc text dc/font-color pos/x pos/y
-; 	][
-; 		;; DEBUG: print ["OS-draw-text: " pos/x "x" pos/y lf]
-; 		draw-text-box dc pos as red-object! text catch?
-; 	]
-
-; 	;; DEBUG: print ["OS-draw-text end" lf]
-; 	true
-; ]
 
 ; OS-draw-arc: func [
 ; 	dc	   [draw-ctx!]
@@ -918,55 +872,48 @@ OS2-draw-ellipse: func [
 ; 	do-paint dc
 ; ]
 
-; OS2-draw-arc: func [
-; 	dc	   [draw-ctx!]
-; 	center-x [integer!] center-y [integer!] 
-; 	end-x	 [integer!] end-y	 [integer!]
-; 	/local
-; 		ctx			[handle!]
-; 		;rad-x		[integer!] rad-y		[integer!]
-; 		angle		[integer!]
-; 		begin		[integer!]
-; 		cx			[float!]
-; 		cy			[float!]
-; 		rad-x		[float!]
-; 		rad-y		[float!]
-; 		angle-begin [float!]
-; 		angle-end	[float!]
-; 		rad			[float!]
-; 		sweep		[integer!]
-; 		i			[integer!]
-; 		closed?		[logic!]
-; ][
-; 	ctx: dc/raw
-; 	cx: as float! center-x
-; 	cy: as float! center-y
-; 	rad: PI / 180.0
+OS2-draw-arc: func [
+	dc	   		[draw-ctx!]
+	center-x 	[integer!] center-y [integer!]
+	radius-x 	[integer!] radius-y [integer!]  
+	angle-begin [integer!] angle-sweep [integer!]
+	closed?	 	[logic!]
+	/local
+		ctx			[handle!]
+		cx			[float!]
+		cy			[float!]
+		rad-x		[float!]
+		rad-y		[float!]
+		fl-angle-begin [float!]
+		fl-angle-end   [float!]
+		radian		[float!]
+][
+	ctx: dc/raw
+	cx: as float! center-x
+	cy: as float! center-y
+	radian: PI / 180.0
 
-; 	radius: center + 1
-; 	rad-x: as float! radius/x
-; 	rad-y: as float! radius/y
-; 	begin: as red-integer! radius + 1
-; 	angle-begin: rad * as float! begin/value
-; 	angle: begin + 1
-; 	sweep: angle/value
-; 	i: begin/value + sweep
-; 	angle-end: rad * as float! i
+	rad-x: as float! radius-x
+	rad-y: as float! radius-y
+	fl-angle-begin: radian * as float! angle-begin
+	fl-angle-end: fl-angle-begin  + (radian * as float! angle-sweep)
 
-; 	closed?: angle < end
-
-; 	cairo_save ctx
-; 	unless closed? [dc/brush?: no]
-; 	cairo_translate ctx cx    cy
-; 	cairo_scale     ctx rad-x rad-y
-; 	cairo_arc_negative ctx 0.0 0.0 1.0 angle-begin angle-end
-; 	if closed? [
-; 		cairo_line_to ctx 0.0 0.0
-; 		cairo_close_path ctx
-; 	]
-; 	cairo_restore ctx
-; 	do-paint dc
-; ]
+	cairo_save ctx
+	unless closed? [dc/brush?: no]
+	cairo_translate ctx cx    cy
+	cairo_scale     ctx rad-x rad-y
+	either angle-sweep < 0 [
+		cairo_arc_negative ctx 0.0 0.0 1.0 fl-angle-begin fl-angle-end
+	][
+		cairo_arc ctx 0.0 0.0 1.0 fl-angle-begin fl-angle-end
+	]
+	if closed? [
+		cairo_line_to ctx 0.0 0.0
+		cairo_close_path ctx
+	]
+	cairo_restore ctx
+	do-paint dc
+]
 
 ; OS-draw-curve: func [
 ; 	dc	  [draw-ctx!]
@@ -1261,6 +1208,25 @@ OS2-draw-ellipse: func [
 ; 	]
 ; ]
 
+OS2-matrix-rotate: func [
+	dc		[draw-ctx!]
+	pen		[integer!]
+	angle	[integer!]
+	center-x [integer!] center-y [integer!]
+	/local
+		cr 	[handle!]
+		rad [float!]
+][
+	cr: dc/raw
+	rad: PI / 180.0 * (as float! angle)
+	 
+	cairo_translate cr as float! center-x 
+					as float! center-y
+	cairo_rotate cr rad
+	cairo_translate cr as float! (0 - center-x) 
+				as float! (0 - center-y)
+]
+
 ; OS-matrix-scale: func [
 ; 	dc		[draw-ctx!]
 ; 	pen		[integer!]
@@ -1274,6 +1240,18 @@ OS2-draw-ellipse: func [
 ; 				   as float! get-float32 sy
 ; ]
 
+OS2-matrix-scale: func [
+	dc		[draw-ctx!]
+	pen		[integer!]
+	sx		[integer!]
+	sy		[integer!]
+	/local
+		cr [handle!]
+][
+	cr: dc/raw
+	cairo_scale cr as float! sx as float! sy
+]
+
 ; OS-matrix-translate: func [
 ; 	dc	[draw-ctx!]
 ; 	pen	[integer!]
@@ -1286,6 +1264,19 @@ OS2-draw-ellipse: func [
 ; 	cairo_translate cr as-float x 
 ; 					   as-float y
 ; ]
+
+OS2-matrix-translate: func [
+	dc	[draw-ctx!]
+	pen	[integer!]
+	x	[integer!]
+	y	[integer!]
+	/local
+		cr [handle!]
+][
+	cr: dc/raw
+	cairo_translate cr as float! x 
+					   as float! y
+]
 
 ; OS-matrix-skew: func [
 ; 	dc		[draw-ctx!]
@@ -1306,6 +1297,25 @@ OS2-draw-ellipse: func [
 ; 	y: as float32! either sx = sy [0.0][tan degree-to-radians get-float sy TYPE_TANGENT]
 ; ]
 
+OS2-matrix-skew: func [
+	dc		[draw-ctx!]
+	pen		[integer!]
+	sx		[integer!]
+	sy		[integer!]
+	/local
+		m	[integer!]
+		x	[float!]
+		y	[float!]
+		u	[float!]
+		z	[float!]
+][
+	m: 0
+	u: as float! 1.0
+	z: as float! 0.0
+	x: as float! tan degree-to-radians as float! sx TYPE_TANGENT
+	y: as float! either sx = sy [0.0][tan degree-to-radians as float! sy TYPE_TANGENT]
+]
+
 ; OS-matrix-transform: func [
 ; 	dc			[draw-ctx!]
 ; 	pen			[integer!]
@@ -1324,47 +1334,62 @@ OS2-draw-ellipse: func [
 ; 	OS-matrix-translate dc pen translate/x translate/y
 ; ]
 
-; OS-matrix-push: func [dc [draw-ctx!]  state [draw-state!]][
-; cairo_save dc/raw
-; ]
+OS-matrix-transform: func [
+	dc			[draw-ctx!]
+	pen			[integer!]
+	rotate		[integer!]
+	center-x	[integer!] center-y		[integer!]
+	scale-x		[integer!] scale-y		[integer!]
+	translate-x	[integer!] translate-y	[integer!]
+	/local
+		center? [logic!]
+][
+	OS2-matrix-rotate dc pen rotate center-x center-y
+	OS2-matrix-scale dc pen scale-x scale-y
+	OS2-matrix-translate dc pen translate-x translate-y
+]
 
-; OS-matrix-pop: func [dc [draw-ctx!] state [draw-state!]][
-; 	cairo_restore dc/raw
-; ]
+OS-matrix-push: func [dc [draw-ctx!]  state [draw-state!]][
+	cairo_save dc/raw
+]
 
-; OS-matrix-reset: func [
-; 	dc [draw-ctx!]
-; 	pen [integer!]
-; 	/local
-; 		cr [handle!]
-; ][
-; 	cr: dc/raw
-; 	cairo_identity_matrix cr
-; ]
+OS-matrix-pop: func [dc [draw-ctx!] state [draw-state!]][
+	cairo_restore dc/raw
+]
+
+OS-matrix-reset: func [
+	dc [draw-ctx!]
+	pen [integer!]
+	/local
+		cr [handle!]
+][
+	cr: dc/raw
+	cairo_identity_matrix cr
+]
 
 ; OS-matrix-invert: func [
 ; 	dc	[draw-ctx!]
 ; 	pen	[integer!]
 ; ][]
 
-; OS-matrix-set: func [
-; 	dc		[draw-ctx!]
-; 	pen		[integer!]
-; 	blk		[red-block!]
-; 	/local
-; 		m	[cairo_matrix_t! value]
-; 		val [red-integer!]
-; ][
-; 	m: null
-; 	val: as red-integer! block/rs-head blk
-;     m/xx: get-float val
-;     m/yx: get-float val + 1
-;     m/xy: get-float val + 2
-;     m/yy: get-float val + 3
-;     m/x0: get-float val + 4
-;     m/y0: get-float val + 5
-; 	cairo_transform dc/raw :m ; Weirdly it is not cairo_set_matrix because it is a global change!  
-; ]
+OS-matrix-set: func [
+	dc		[draw-ctx!]
+	pen		[integer!]
+	xx [float!] yx [float!]
+	xy [float!] yy [float!]
+	x0 [float!] y0 [float!]
+	/local
+		m	[cairo_matrix_t! value]
+][
+	m: null
+    m/xx: xx
+    m/yx: yx
+    m/xy: xy
+    m/yy: yy
+    m/x0: x0
+    m/y0: y0
+	cairo_transform dc/raw :m ; Weirdly it is not cairo_set_matrix because it is a global change!  
+]
 
 ; OS-set-matrix-order: func [
 ; 	ctx		[draw-ctx!]
@@ -1383,20 +1408,20 @@ OS2-draw-ellipse: func [
 
 ; ;-- shape sub command --
 
-; OS-draw-shape-beginpath: func [
-; 	dc			[draw-ctx!]
-; ][ 
-; ]
+OS-draw-shape-beginpath: func [
+	dc			[draw-ctx!]
+][ 
+]
 
-; OS-draw-shape-endpath: func [
-; 	dc			[draw-ctx!]
-; 	close?		[logic!]
-; 	return:		[logic!]
-; ][
-; 	if close? [cairo_close_path dc/raw]
-; 	do-paint dc
-; 	true
-; ]
+OS-draw-shape-endpath: func [
+	dc			[draw-ctx!]
+	close?		[logic!]
+	return:		[logic!]
+][
+	if close? [cairo_close_path dc/raw]
+	do-paint dc
+	true
+]
 
 ; OS-draw-shape-moveto: func [
 ; 	dc		[draw-ctx!]
@@ -1415,6 +1440,25 @@ OS2-draw-ellipse: func [
 ; 	]
 ; 	dc/shape-curve?: no
 ; ]
+
+OS2-draw-shape-moveto: func [
+	dc		[draw-ctx!]
+	coord-x	[integer!] coord-y	[integer!]
+	rel?	[logic!]
+	/local
+		x		[float!]
+		y		[float!]
+][
+	x: as float! coord-x
+	y: as float! coord-y
+	either rel? [
+		cairo_rel_move_to dc/raw x y
+	][
+		cairo_move_to dc/raw x y
+	]
+	dc/shape-curve?: no
+]
+
 
 ; OS-draw-shape-line: func [
 ; 	dc			[draw-ctx!]
@@ -1439,7 +1483,56 @@ OS2-draw-ellipse: func [
 ; 	dc/shape-curve?: no
 ; ]
 
+OS2-draw-shape-line: func [
+  [variadic]
+  count [integer!] list [int-ptr!]
+  /local
+	dc 		[draw-ctx!]
+	x		[integer!]
+	y		[integer!]
+	rel?	[logic!]
+][
+  dc: as draw-ctx! R/h? :count list list: list + 1
+  rel?: R/l? :count list list: list + 1
+  until [
+	x: R/i? :count list list: list + 1
+	y: R/i? :count list list: list + 1
+	;;print ["line: count=" count " at "x "x" y lf ]
+	either rel? [
+		cairo_rel_line_to dc/raw as float! x as float! y
+	][
+		cairo_line_to dc/raw as float! x as float! y
+	]
+	zero? count
+  ]
+  do-paint dc
+]
+
 ; OS-draw-shape-axis: func [
+; 	dc			[draw-ctx!]
+; 	start		[red-value!]
+; 	end			[red-value!]
+; 	rel?		[logic!]
+; 	hline?		[logic!]
+; 	/local
+; 		len 	[float!]
+; 		last-x	[float!]
+; 		last-y	[float!]
+; ][
+; 	last-x: 0.0 last-y: 0.0
+; 	if 1 = cairo_has_current_point dc/raw[
+; 		cairo_get_current_point dc/raw :last-x :last-y
+; 	]
+; 	len: get-float as red-integer! start
+; 	either hline? [
+; 		cairo_line_to dc/raw either rel? [last-x + len][len] last-y
+; 	][
+; 		cairo_line_to dc/raw last-x either rel? [last-y + len][len]
+; 	]
+; 	dc/shape-curve?: no
+; ]
+
+; OS2-draw-shape-axis: func [
 ; 	dc			[draw-ctx!]
 ; 	start		[red-value!]
 ; 	end			[red-value!]
@@ -1688,6 +1781,398 @@ OS2-draw-ellipse: func [
 ; 	cairo_arc ctx 0.0 0.0 1.0 as float! cx as float! cy
 ; 	cairo_restore ctx
 ; ]
+
+; OS-draw-shape-arc: func [
+; 	ctx		[draw-ctx!]
+; 	end		[red-pair!]
+; 	sweep?	[logic!]
+; 	large?	[logic!]
+; 	rel?	[logic!]
+; 	/local
+; 		item		[red-integer!]
+; 		center-x	[float!]
+; 		center-y	[float!]
+; 		cx			[float!]
+; 		cy			[float!]
+; 		cf			[float!]
+; 		angle-1		[float!]
+; 		angle-2		[float!]
+; 		angle-len	[float!]
+; 		radius-x	[float!]
+; 		radius-y	[float!]
+; 		theta		[float!]
+; 		X1			[float!]
+; 		Y1			[float!]
+; 		p1-x		[float!]
+; 		p1-y		[float!]
+; 		p2-x		[float!]
+; 		p2-y		[float!]
+; 		cos-val		[float!]
+; 		sin-val		[float!]
+; 		rx2			[float!]
+; 		ry2			[float!]
+; 		dx			[float!]
+; 		dy			[float!]
+; 		sqrt-val	[float!]
+; 		sign		[float!]
+; 		rad-check	[float!]
+; 		angle		[red-integer!]
+; 		center		[red-pair!]
+; 		m			[integer!]
+; 		path		[integer!]
+; 		arc-dir		[integer!]
+; 		prev-dir	[integer!]
+; 		pt			[tagPOINT]
+; 		arc-points	[arcPOINTS!]
+; 		dc			[handle!]
+; ][
+; 	if ctx/other/last-point? [
+; 		;-- parse arguments
+; 		p1-x: as float! ctx/other/path-last-point/x
+; 		p1-y: as float! ctx/other/path-last-point/y
+; 		p2-x: either rel? [ p1-x + as float! end/x ][ as float! end/x ]
+; 		p2-y: either rel? [ p1-y + as float! end/y ][ as float! end/y ]
+; 		item: as red-integer! end + 1
+; 		radius-x: get-float item
+; 		item: item + 1
+; 		radius-y: get-float item
+; 		item: item + 1
+; 		theta: get-float item
+; 		if radius-x < 0.0 [ radius-x: radius-x * -1.0]
+; 		if radius-y < 0.0 [ radius-x: radius-x * -1.0]
+
+; 		;-- calculate center
+; 		dx: (p1-x - p2-x) / 2.0
+; 		dy: (p1-y - p2-y) / 2.0
+; 		cos-val: cos degree-to-radians theta TYPE_COSINE
+; 		sin-val: sin degree-to-radians theta TYPE_SINE
+; 		X1: (cos-val * dx) + (sin-val * dy)
+; 		Y1: (cos-val * dy) - (sin-val * dx)
+; 		rx2: radius-x * radius-x
+; 		ry2: radius-y * radius-y
+; 		rad-check: ((X1 * X1) / rx2) + ((Y1 * Y1) / ry2)
+; 		if rad-check > 1.0 [
+; 			radius-x: radius-x * sqrt rad-check
+; 			radius-y: radius-y * sqrt rad-check
+; 			rx2: radius-x * radius-x
+; 			ry2: radius-y * radius-y
+; 		]
+; 		sign: either large? = sweep? [ -1.0 ][ 1.0 ]
+; 		sqrt-val: ((rx2 * ry2) - (rx2 * Y1 * Y1) - (ry2 * X1 * X1)) / ((rx2 * Y1 * Y1) + (ry2 * X1 * X1))
+; 		cf: either sqrt-val < 0.0 [ 0.0 ][ sign * sqrt sqrt-val ]
+; 		cx: cf * (radius-x * Y1 / radius-y)
+; 		cy: cf * (radius-y * X1 / radius-x) * -1.0
+; 		center-x: (cos-val * cx) - (sin-val * cy) + ((p1-x + p2-x) / 2.0)
+; 		center-y: (sin-val * cx) + (cos-val * cy) + ((p1-y + p2-y) / 2.0)
+
+; 		;-- calculate angles
+; 		angle-1: radian-to-degrees atan (float/abs ((p1-y - center-y) / (p1-x - center-x)))
+; 		angle-1: adjust-angle (p1-x - center-x) (p1-y - center-y) angle-1
+; 		angle-2: radian-to-degrees atan (float/abs ((p2-y - center-y) / (p2-x - center-x)))
+; 		angle-2: adjust-angle (p2-x - center-x) (p2-y - center-y) angle-2
+; 		angle-len: angle-2 - angle-1
+; 		either sweep? [
+; 			if angle-len < 0.0 [angle-len: 360.0 + angle-len]
+; 		][
+; 			if angle-len > 0.0 [angle-len: angle-len - 360.0]
+; 		]
+; 		angle-1: angle-1 - theta
+
+; 		;--draw arc
+; 		either ctx/other/GDI+? [
+; 			path: 0
+; 			GdipCreatePath 0 :path	; alternate fill
+; 			GdipAddPathArc
+; 				path
+; 				as float32! center-x - radius-x
+; 				as float32! center-y - radius-y
+; 				as float32! (radius-x * 2.0)
+; 				as float32! (radius-y * 2.0)
+; 				as float32! angle-1
+; 				as float32! angle-len
+; 			m: 0
+
+; 			GdipCreateMatrix :m
+; 			GdipTranslateMatrix m as float32! (center-x * -1.0) as float32! (center-y * -1.0) GDIPLUS_MATRIX_APPEND
+; 			GdipRotateMatrix m as float32! theta GDIPLUS_MATRIX_APPEND
+; 			GdipTranslateMatrix m as float32! center-x as float32! center-y GDIPLUS_MATRIX_APPEND
+; 			GdipTransformPath path m
+; 			GdipDeleteMatrix m
+
+; 			GdipAddPathPath ctx/gp-path path ctx/other/connect-subpath
+; 			GdipDeletePath path
+; 		][
+; 			dc: ctx/dc
+; 			either theta <> 0.0 [
+; 				arc-points: gdi-calc-arc
+; 								center-x
+; 								center-y
+; 								radius-x
+; 								radius-y
+; 								angle-1
+; 								angle-len
+; 			][
+; 				arc-points: declare arcPOINTS!
+; 				arc-points/start-x: p1-x
+; 				arc-points/start-y: p1-y
+; 				arc-points/end-x: p2-x
+; 				arc-points/end-y: p2-y
+; 			]
+
+; 			set-matrix xform 1.0 0.0 0.0 1.0 center-x * -1.0 center-y * -1.0
+; 			SetWorldTransform dc xform
+; 			set-matrix xform cos-val sin-val sin-val * -1.0 cos-val center-x center-y
+; 			ModifyWorldTransform dc xform MWT_RIGHTMULTIPLY
+
+; 			prev-dir: GetArcDirection dc
+; 			arc-dir: either sweep? [ AD_CLOCKWISE ][ AD_COUNTERCLOCKWISE ]
+; 			SetArcDirection dc arc-dir
+; 			Arc
+; 				dc
+; 				as integer! center-x - radius-x
+; 				as integer! center-y - radius-y
+; 				as integer! center-x + radius-x
+; 				as integer! center-y + radius-y
+; 				as integer! arc-points/start-x
+; 				as integer! arc-points/start-y
+; 				as integer! arc-points/end-x
+; 				as integer! arc-points/end-y
+; 			SetArcDirection dc prev-dir
+
+; 			set-matrix xform 1.0 0.0 0.0 1.0 0.0 0.0
+; 			SetWorldTransform dc xform
+; 		]
+
+; 		;-- set last point
+; 		ctx/other/last-point?: yes
+; 		ctx/other/path-last-point/x: as integer! p2-x
+; 		ctx/other/path-last-point/y: as integer! p2-y
+; 		ctx/other/prev-shape/type: SHAPE_OTHER
+; 		ctx/other/connect-subpath: 1
+; 	]
+; ]
+
+OS2-draw-shape-arc: func [
+	dc		[draw-ctx!]
+	end-x	[integer!] end-y [integer!]
+	radius-x	[integer!] radius-y	[integer!]
+	angle	[integer!]
+	sweep?	[logic!]
+	large?	[logic!]
+	rel?	[logic!]
+	/local
+		ctx			[handle!]
+		last-x		[float!]
+		last-y		[float!]
+		center-x	[float!]
+		center-y	[float!]
+		cx			[float!]
+		cy			[float!]
+		cf			[float!]
+		angle-1		[float!]
+ 		angle-2		[float!]
+		angle-len	[float!]
+		r-x 		[float!]
+		r-y 		[float!]
+		theta		[float!]
+		X1			[float!]
+		Y1			[float!]
+		p1-x		[float!]
+		p1-y		[float!]
+		p2-x		[float!]
+		p2-y		[float!]
+		cos-val		[float!]
+		sin-val		[float!]
+		rx2			[float!]
+		ry2			[float!]
+		dx			[float!]
+		dy			[float!]
+		sqrt-val	[float!]
+		sign		[float!]
+		rad-check	[float!]
+		deg2rad		[float!]
+][
+	last-x: 0.0 last-y: 0.0
+	if 1 = cairo_has_current_point dc/raw[
+		cairo_get_current_point dc/raw :last-x :last-y
+	]
+	p1-x: as float! last-x p1-y: as float! last-y
+	p2-x: either rel? [ p1-x + as float! end-x ][ as float! end-x ]
+	p2-y: either rel? [ p1-y + as float! end-y ][ as float! end-y ]
+	r-x: as float! radius-x
+	r-y: as float! radius-y
+	theta: as float! angle
+	deg2rad: as float! (PI / 180.0)
+
+	;-- calculate center
+	dx: (p1-x - p2-x) / 2.0
+	dy: (p1-y - p2-y) / 2.0
+	cos-val: cos degree-to-radians theta TYPE_COSINE
+ 	sin-val: sin degree-to-radians theta TYPE_SINE
+	X1: (cos-val * dx) + (sin-val * dy)
+	Y1: (cos-val * dy) - (sin-val * dx)
+	rx2: r-x * r-x
+	ry2: r-y * r-y
+	rad-check: ((X1 * X1) / rx2) + ((Y1 * Y1) / ry2)
+	if rad-check > 1.0 [
+		r-x: r-x * sqrt rad-check
+		r-y: r-y * sqrt rad-check
+		rx2: r-x * r-x
+		ry2: r-y * r-y
+	]
+	sign: either large? = sweep? [ -1.0 ][ 1.0 ]
+	sqrt-val: ((rx2 * ry2) - (rx2 * Y1 * Y1) - (ry2 * X1 * X1)) / ((rx2 * Y1 * Y1) + (ry2 * X1 * X1))
+	cf: either sqrt-val < 0.0 [ 0.0 ][ sign * sqrt sqrt-val ]
+	cx: cf * (r-x * Y1 / r-y)
+	cy: cf * (r-y * X1 / r-x) * -1.0
+	center-x: (cos-val * cx) - (sin-val * cy) + ((p1-x + p2-x) / 2.0)
+	center-y: (sin-val * cx) + (cos-val * cy) + ((p1-y + p2-y) / 2.0)
+
+	;-- calculate angles
+	angle-1: radian-to-degrees atan (abs ((p1-y - center-y) / (p1-x - center-x)))
+	angle-1: adjust-angle (p1-x - center-x) (p1-y - center-y) angle-1
+	angle-2: radian-to-degrees atan (abs ((p2-y - center-y) / (p2-x - center-x)))
+	angle-2: adjust-angle (p2-x - center-x) (p2-y - center-y) angle-2
+	angle-len: angle-2 - angle-1
+	either sweep? [
+		if angle-len < 0.0 [angle-len: 360.0 + angle-len]
+	][
+		if angle-len > 0.0 [angle-len: angle-len - 360.0]
+	]
+	angle-1: angle-1 - theta
+	angle-2: angle-1 + angle-len
+ 
+	ctx: dc/raw
+	cairo_save ctx
+	;cairo_new_sub_path ctx
+	;unless closed? [dc/brush?: no]
+	cairo_translate ctx center-x center-y
+	cairo_scale     ctx r-x r-y
+	either angle-len < 0.0 [
+		cairo_arc_negative ctx 0.0 0.0 1.0 (angle-1 * deg2rad) (angle-2 * deg2rad)
+	][
+		cairo_arc ctx 0.0 0.0 1.0 (angle-1 * deg2rad) (angle-2 * deg2rad)
+	]
+	; if closed? [
+	; 	cairo_close_path ctx
+	; ]
+	cairo_restore ctx
+]
+
+OS2-draw-shape-arc-OLD: func [
+	dc		[draw-ctx!]
+	end-x	[integer!] end-y [integer!]
+	radius-x	[integer!] radius-y	[integer!]
+	angle	[integer!]
+	sweep?	[logic!]
+	large?	[logic!]
+	rel?	[logic!]
+	/local
+		ctx			[handle!]
+		last-x		[float!]
+		last-y		[float!]
+		center-x	[float32!]
+		center-y	[float32!]
+		cx			[float32!]
+		cy			[float32!]
+		cf			[float32!]
+		angle-len	[float32!]
+		r-x 		[float32!]
+		r-y 		[float32!]
+		theta		[float32!]
+		X1			[float32!]
+		Y1			[float32!]
+		p1-x		[float32!]
+		p1-y		[float32!]
+		p2-x		[float32!]
+		p2-y		[float32!]
+		cos-val		[float32!]
+		sin-val		[float32!]
+		rx2			[float32!]
+		ry2			[float32!]
+		dx			[float32!]
+		dy			[float32!]
+		sqrt-val	[float32!]
+		sign		[float32!]
+		rad-check	[float32!]
+		pi2			[float32!]
+][
+	last-x: 0.0 last-y: 0.0
+	if 1 = cairo_has_current_point dc/raw[
+		cairo_get_current_point dc/raw :last-x :last-y
+	]
+	p1-x: as float32! last-x p1-y: as float32! last-y
+	p2-x: either rel? [ p1-x + as float32! end-x ][ as float32! end-x ]
+	p2-y: either rel? [ p1-y + as float32! end-y ][ as float32! end-y ]
+	r-x: fabsf as float32! radius-x
+	r-y: fabsf as float32! radius-y
+	theta: as float32! angle
+	theta: theta * as float32! (PI / 180.0)
+	pi2: as float32! 2.0 * PI
+	;theta: theta % pi2
+
+	;-- calculate center
+	dx: (p1-x - p2-x) / as float32! 2.0
+	dy: (p1-y - p2-y) / as float32! 2.0
+	cos-val: cosf theta
+	sin-val: sinf theta
+	X1: (cos-val * dx) + (sin-val * dy)
+	Y1: (cos-val * dy) - (sin-val * dx)
+	rx2: r-x * r-x
+	ry2: r-y * r-y
+	rad-check: ((X1 * X1) / rx2) + ((Y1 * Y1) / ry2)
+	if rad-check > as float32! 1.0 [
+		r-x: r-x * sqrtf rad-check
+		r-y: r-y * sqrtf rad-check
+		rx2: r-x * r-x
+		ry2: r-y * r-y
+	]
+	either large? = sweep? [sign: as float32! -1.0 ][sign: as float32! 1.0 ]
+	sqrt-val: ((rx2 * ry2) - (rx2 * Y1 * Y1) - (ry2 * X1 * X1)) / ((rx2 * Y1 * Y1) + (ry2 * X1 * X1))
+	either sqrt-val < as float32! 0.0 [cf: as float32! 0.0 ][ cf: sign * sqrtf sqrt-val ]
+	cx: cf * (r-x * Y1 / r-y)
+	cy: cf * (r-y * X1 / r-x) * (as float32! -1.0)
+	center-x: (cos-val * cx) - (sin-val * cy) + ((p1-x + p2-x) / as float32! 2.0)
+	center-y: (sin-val * cx) + (cos-val * cy) + ((p1-y + p2-y) / as float32! 2.0)
+
+
+	;-- transform our ellipse into the unit circle
+	; m: CGAffineTransformMakeScale (as float! 1.0) / radius-x (as float! 1.0) / radius-y
+	; m: CGAffineTransformRotate m (as float! 0.0) - theta
+	; m: CGAffineTransformTranslate m (as float! 0.0) - center-x (as float! 0.0) - center-y
+
+	; pt1/x: p1-x pt1/y: p1-y
+	; pt2/x: p2-x pt2/y: p2-y
+	; pt1: CGPointApplyAffineTransform pt1 m
+	; pt2: CGPointApplyAffineTransform pt2 m
+
+	;-- calculate angles
+	cx: atan2f p1-y p1-x
+	cy: atan2f p2-y p2-x
+	angle-len: cy - cx
+	either sweep? [
+		if angle-len < as float32! 0.0 [
+			angle-len: angle-len + pi2
+		]
+	][
+		if angle-len > as float32! 0.0 [
+			angle-len: angle-len - pi2
+		]
+	]
+
+	;-- construct the inverse transform
+	; m: CGAffineTransformMakeTranslation center-x center-y
+	; m: CGAffineTransformRotate m theta
+	; m: CGAffineTransformScale m radius-x radius-y
+	; CGPathAddRelativeArc ctx/path :m as float32! 0.0 as float32! 0.0 as float32! 1.0 cx angle-len
+	ctx: dc/raw
+	cairo_save ctx
+	cairo_new_sub_path ctx
+	cairo_translate ctx as float! center-x as float! center-y
+	cairo_scale     ctx as float! radius-x as float! radius-y
+	cairo_arc ctx 0.0 0.0 1.0 as float! cx as float! cy
+	cairo_restore ctx
+]
 
 ; OS-draw-shape-close: func [
 ; 	dc		[draw-ctx!]
