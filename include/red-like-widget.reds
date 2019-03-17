@@ -53,7 +53,7 @@ WidgetFace!: alias struct! [
 	widget	  [handle!]
 ]
 
-new-face: func [
+make-face: func [
 	type 	[WidgetType!]
 	parent	[WidgetFace!]
 	caption	[c-string!]
@@ -77,13 +77,6 @@ free-face: func [
 	face 	[WidgetFace!]
 ][
 	free as byte-ptr! face
-]
-
-store-face-to-obj: func [
-	obj		[handle!]
-	face	[WidgetFace!]
-][
-	g_object_set_qdata obj face-id as int-ptr! face
 ]
 
 make-view: func [
@@ -274,20 +267,20 @@ make-view: func [
 		; 	fvalue: get-fraction-value as red-float! data
 		; 	gtk_progress_bar_set_fraction widget fvalue
 		; ]
-		; sym = area [
-		; 	widget: gtk_text_view_new
-		; 	buffer: gtk_text_view_get_buffer widget
-		; 	unless null? caption [gtk_text_buffer_set_text buffer caption -1]
-		; 	_widget: gtk_scrolled_window_new null null
-		; 	gtk_container_add _widget widget
-		; 	gobj_signal_connect(buffer "changed" :area-changed widget)
-		; 	g_object_set [widget "populate-all" yes null] 
-		; 	gobj_signal_connect(widget "button-press-event" :area-button-press-event face/ctx)
-		; 	gobj_signal_connect(widget "populate-popup" :area-populate-popup face/ctx)
-		; 	gobj_signal_connect(widget "button-release-event" :area-button-release-event face/ctx)
-		; 	gobj_signal_connect(widget "key-press-event" :key-press-event face/ctx)
-		; 	gobj_signal_connect(widget "key-release-event" :key-release-event face/ctx)		
-		; ]
+		sym = area [
+			widget: gtk_text_view_new
+			buffer: gtk_text_view_get_buffer widget
+			unless null? caption [gtk_text_buffer_set_text buffer caption -1]
+			_widget: gtk_scrolled_window_new null null
+			gtk_container_add _widget widget
+			; gobj_signal_connect(buffer "changed" :area-changed widget)
+			; g_object_set [widget "populate-all" yes null] 
+			; gobj_signal_connect(widget "button-press-event" :area-button-press-event face/ctx)
+			; gobj_signal_connect(widget "populate-popup" :area-populate-popup face/ctx)
+			; gobj_signal_connect(widget "button-release-event" :area-button-release-event face/ctx)
+			; gobj_signal_connect(widget "key-press-event" :key-press-event face/ctx)
+			; gobj_signal_connect(widget "key-release-event" :key-release-event face/ctx)		
+		]
 		; sym = group-box [
 		; 	widget: gtk_frame_new caption
 		; 	gtk_frame_set_shadow_type widget 3
@@ -341,6 +334,7 @@ make-view: func [
 		][
 			widget: either sym = drop-list [gtk_combo_box_text_new][gtk_combo_box_text_new_with_entry]
 			;;;init-combo-box widget data caption sym = drop-list
+			if sym = drop-down[gtk_entry_set_width_chars gtk_bin_get_child widget (face/size-x - 20) / 10 ]
 			gtk_combo_box_set_active widget 0
 			;;;gobj_signal_connect(widget "changed" :combo-selection-changed face/ctx)
 		]
@@ -433,8 +427,8 @@ make-view: func [
 
 	;-- store the face value in the extra space of the window struct
 	; assert TYPE_OF(face) = TYPE_OBJECT					;-- detect corruptions caused by CreateWindow unwanted events
-	store-face-to-obj widget face
-	if sym = text [store-face-to-obj _widget face]
+	face-widget widget face
+	if sym = text [face-widget _widget face]
 
 	; change-selection widget as red-integer! values + FACE_OBJ_SELECTED sym
 	; change-para widget face as red-object! values + FACE_OBJ_PARA font sym
@@ -454,7 +448,25 @@ make-view: func [
 	widget
 ]
 
-data?: func [
+;;;=============== utility functions =============;;;
+
+; equivalent to store-face-to-obj in red/gtk
+face-widget: func [
+	widget	[handle!]
+	face	[WidgetFace!]
+][
+	g_object_set_qdata widget face-id as int-ptr! face
+]
+
+face-widget?: func [
+	widget	[handle!]
+	return:	[WidgetFace!]
+][
+	as WidgetFace! g_object_get_qdata widget face-id
+]
+
+;; Change data (also init-combo-box and init-text-list)
+face-data: func [
 	[variadic]
 	count [integer!] list [int-ptr!]
 	/local

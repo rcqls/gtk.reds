@@ -9,6 +9,14 @@ As I think `julia` was clever to have named its package with extension `.jl` whi
 red -c examples/hello.reds
 ```
 
+or
+
+```
+gtk-reds tests/gtk3/gtk-red-like-tests.reds
+```
+
+to cross-compile (for Linux) and copy the binary file in `~/Github/gtk-reds/bin/`
+
 ## Powerfull red/system
 
 As `red/system` offers natively what other languages call `ffi`, it is very simple to create a red/system plugin. Actually, this one is nothing else than the two main files in the `red/red:GTK` branch used to connect gtk library to `red`.

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+redsfile="$1"
+
+# option '-d' (or '--dir') later
+gtkredsdir="${HOME}/Github/gtk.reds"
+gtkredsbindir="${gtkredsdir}/bin"
+
+# option '-o' later
+redsfilebin=""
+
+# option '-t' latex
+redsarch="-t Linux"
+
+if [ "$redsfilebin" = "" ];then
+	basename=$(basename ${redsfile})
+	redsfilebin="${basename%.*}"
+fi
+
+red ${redsarch} $redsfile 
+
+if [ -f $redsfilebin ]; then
+	mkdir -p $gtkredsbindir
+	mv $redsfilebin $gtkredsbindir/
+fi

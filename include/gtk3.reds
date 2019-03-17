@@ -1350,6 +1350,10 @@ GList!: alias struct! [
 			entry		[handle!]
 			nchars		[integer!]
 		]
+		gtk_entry_set_max_width_chars: "gtk_entry_set_max_width_chars" [
+			entry		[handle!]
+			nchars		[integer!]
+		]
 		gtk_entry_get_buffer: "gtk_entry_get_buffer" [
 			entry		[handle!]
 			return:		[handle!]
@@ -1496,6 +1500,10 @@ GList!: alias struct! [
 		gtk_combo_box_text_get_active_text: "gtk_combo_box_text_get_active_text"  [
 			combo		[handle!]
 			return:		[c-string!]
+		]
+		gtk_combo_box_set_popup_fixed_width: "gtk_combo_box_set_popup_fixed_width" [
+			combo		[handle!]
+			fixed 	[logic!]
 		]
 		gtk_notebook_new: "gtk_notebook_new" [
 			return:		[handle!]
