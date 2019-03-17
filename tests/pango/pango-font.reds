@@ -1,7 +1,7 @@
 Red/System[]
 
 #include %../../gtk3.reds
-#include %../../include/quick-demo.reds
+#include %../../include/gtk-app.reds
 
 app-font-name: "Consolas 10"
 
@@ -78,10 +78,10 @@ try-to-get-font: func [
 
 ]
 
-demo/begin
+gtk/begin
 
 lay: gtk_layout_new null null
-gtk_container_add demo/window lay
+gtk_container_add gtk/window lay
 
 text:  gtk_label_new "toto"
 but: gtk_button_new_with_label "Sans"
@@ -100,4 +100,4 @@ gobj_signal_connect(but2 "clicked" :font-consolas-10 null)
 
 
 
-demo/end
+gtk/end

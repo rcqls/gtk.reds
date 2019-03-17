@@ -1,7 +1,7 @@
 Red/System[]
 
 #include %../gtk3.reds
-#include %quick-demo.reds
+#include %gtk-app.reds
 #include %gtk-red-like/widget.reds
 
 ; GTKApp:			as handle! 0
@@ -175,7 +175,7 @@ make-view: func [
 			;; DEBUG: print ["win " GTKApp lf]
 			;widget: gtk_application_window_new GTKApp
 			;win-cnt: win-cnt + 1
-			widget: demo/window ;gtk_window_new 0
+			widget: gtk/window ;gtk_window_new 0
 			;; DEBUG: print ["win1 " widget lf]
 			; gtk_application_add_window GTKApp widget
 			;; DEBUG: print ["win2 " lf]

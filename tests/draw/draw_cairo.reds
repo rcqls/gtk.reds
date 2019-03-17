@@ -1,7 +1,7 @@
 Red/System[]
 
 #include %../../gtk3.reds
-#include %../../include/quick-demo.reds
+#include %../../include/gtk-app.reds
 
 #include %draw_cairo_tests.reds
 
@@ -35,14 +35,14 @@ draw_cb: func [
   yes
 ]
 
-demo/begin
+gtk/begin
 
-gtk_window_set_title  demo/window "Pixbufs"
-gtk_window_set_resizable demo/window  no
+gtk_window_set_title  gtk/window "Pixbufs"
+gtk_window_set_resizable gtk/window  no
 
-frame: gdk_pixbuf_new 0 no 8 demo/width demo/height
+frame: gdk_pixbuf_new 0 no 8 gtk/width gtk/height
 da:  gtk_drawing_area_new
 gobj_signal_connect (da "draw" :draw_cb null)
-gtk_container_add demo/window  da
+gtk_container_add gtk/window  da
 
-demo/end
+gtk/end

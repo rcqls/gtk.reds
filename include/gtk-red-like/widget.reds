@@ -1,5 +1,7 @@
 Red/System[]
 
+;;======== Widget Struct =======;;;
+
 #enum WidgetType! [
 	window	base panel tab-panel group-box
 	button	text field
@@ -22,7 +24,7 @@ WidgetFace!: alias struct! [
 	widget	  [handle!]
 ]
 
-;;;=============== utility functions =============;;;
+;;;======= utility functions ========;;;
 
 ; equivalent to store-face-to-obj in red/gtk
 face-widget: func [

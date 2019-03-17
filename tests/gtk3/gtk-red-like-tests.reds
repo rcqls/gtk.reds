@@ -14,7 +14,7 @@ size: func[[cdecl] widget [handle!] other [handle!] /local w [integer!] h [integ
 	print ["size requested: " w "x" h " vs allocated: " gtk_widget_get_allocated_width other "x" gtk_widget_get_allocated_height other lf]
 ]
 
-demo/begin
+gtk/begin
 
 win: make-face window null "test" 0 0 400 300 
 pan: make-face panel win "panel" 100 100 500 200 
@@ -41,4 +41,4 @@ gobj_signal_connect(but/widget "clicked" :hello  null)
 gobj_signal_connect(but2/widget "clicked" :hello  null)
 gobj_signal_connect(but3/widget "clicked" :hello  null)
 
-demo/end
+gtk/end
