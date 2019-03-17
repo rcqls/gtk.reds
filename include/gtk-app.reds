@@ -21,4 +21,6 @@ gtk: context [
 		gtk_widget_show_all gtk/window
 		gtk_main
 	]
+
+	size: func [width [integer!] height [integer!]][gtk/width: width gtk/height: height]
 ]
