@@ -1,6 +1,6 @@
 Red/System[]
 
-#include %../../include/red-like-widget.reds
+#include %../../gtk3-red-like.reds
 
 hello: func[[cdecl] widget [handle!]/local w [integer!] h [integer!]] [
 	w: -1 h: -1
