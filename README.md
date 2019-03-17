@@ -29,7 +29,7 @@ hello: func[[cdecl] widget [handle!]/local w [integer!] h [integer!]] [
 	print ["Hello World: " w "x" h " vs " gtk_widget_get_allocated_width widget "x" gtk_widget_get_allocated_height widget lf]
 ]
 
-face-signal(but "clicked" :hello  null)
+face-signal(but "clicked" :hello)
 
 gtk/end
 ```

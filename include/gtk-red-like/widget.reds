@@ -27,9 +27,19 @@ WidgetFace!: alias struct! [
 ;;;======= utility functions ========;;;
 
 
-#define face-signal(face signal handler data) [
+#define face-signal(face signal handler) [
+	g_signal_connect_data face/widget signal as-integer handler null null 0
+]
+
+#define face-signal-data(face signal handler data) [
 	g_signal_connect_data face/widget signal as-integer handler data null 0
 ]
+
+#define face-signal-face-data(face signal handler face-data) [
+	g_signal_connect_data face/widget signal as-integer handler face-data/widget null 0
+]
+
+
 ; equivalent to store-face-to-obj in red/gtk
 face-widget: func [
 	widget	[handle!]

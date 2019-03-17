@@ -3,6 +3,7 @@ Red/System[]
 #include %../gtk3.reds
 #include %gtk-app.reds
 #include %gtk-red-like/widget.reds
+#include %gtk-red-like/handlers.reds
 
 ; GTKApp:			as handle! 0
 ; GTKApp-Ctx: 	0
