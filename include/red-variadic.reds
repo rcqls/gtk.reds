@@ -1,6 +1,6 @@
 Red/System[]
 
-R: context [ ; for red-value! replaced by variadic
+RV: context [ ; for red-value! replaced by variadic
 	#enum red-variadic! [
 		i f h l s
 	]

@@ -66,20 +66,20 @@ face-data: func [
 		widget	[handle!]
 		label	[handle!]
 ][
-	face: as WidgetFace! R/h? :count list list: list + 1
+	face: as WidgetFace! RV/h? :count list list: list + 1
 	type: face/type widget: face/widget
 	case [
 		any[type = drop-list type = drop-down][
 			gtk_combo_box_text_remove_all widget
 			until [
-				val: R/s? :count list list: list + 1
+				val: RV/s? :count list list: list + 1
 				gtk_combo_box_text_append_text widget val
 				zero? count
 			]
 		]
 		type = text-list [
 			until [
-				val: R/s? :count list list: list + 1
+				val: RV/s? :count list list: list + 1
 				label: gtk_label_new val
 				;; DEBUG: print ["Add elt: " val lf]
 				gtk_widget_set_halign label 1		;-- GTK_ALIGN_START

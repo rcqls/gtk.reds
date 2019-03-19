@@ -9,8 +9,8 @@ gtk/begin
 ; GUI
 win: make-face window null "test" 0 0 400 300 
 pan: make-face panel win "panel" 100 100 500 200 
-but: make-face button pan "Hello World" 0 0 120 40 
-
+but: make-face button pan "<u>Hello World</u>" 0 0 120 40 
+css [but _font_size 20 _foreground_color 0 255 0 0 _background_color 0 0 255 0 _underline]
 ; SIGNAL (Connection)
 hello: func[[cdecl] widget [handle!]/local w [integer!] h [integer!]] [
 	w: -1 h: -1

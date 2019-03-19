@@ -4,6 +4,7 @@ Red/System[]
 #include %gtk-app.reds
 #include %gtk-red-like/widget.reds
 #include %gtk-red-like/handlers.reds
+#include %gtk-red-like/styles.reds
 
 ; GTKApp:			as handle! 0
 ; GTKApp-Ctx: 	0
@@ -91,6 +92,7 @@ make-view: func [
 		; rfvalue	  [red-float!]
 		; actors	  [red-object!]
 		parent	 [handle!]
+		child	 [handle!]
 ][
 	parent: either null? p-face[null][p-face/widget]
 
@@ -145,7 +147,9 @@ make-view: func [
 		; 	gobj_signal_connect(widget "toggled" :button-toggled face/ctx)
 		; ]
 		sym = button [
-			widget: gtk_button_new_with_label caption
+			widget: gtk_button_new_with_label ""
+			child: gtk_bin_get_child widget
+			gtk_label_set_markup child caption
 			;;; gobj_signal_connect(widget "clicked" :button-clicked null)
 			; if TYPE_OF(img) = TYPE_IMAGE [
 			; 	change-image widget img sym
@@ -339,6 +343,12 @@ make-view: func [
 	][
 		p-sym: p-face/type ;get-widget-symbol as handle! parent
 		either null? _widget [_widget: widget][g_object_set_qdata widget _widget-id _widget ]
+		if sym <> window [
+			gtk_widget_set_hexpand widget no 
+			gtk_widget_set_vexpand widget no
+			gtk_widget_set_hexpand _widget no 
+			gtk_widget_set_vexpand _widget no
+		]
 		; TODO: case to replace with either if no more choice
 		;; DEBUG: print ["Parent: " get-symbol-name p-sym " _widget" _widget lf]
 		case [
@@ -417,7 +427,8 @@ make-view: func [
 	; unless show?/value [change-visible widget no sym]
 	; unless enabled?/value [change-enabled widget no sym]
 	
-	; make-styles-provider widget
+	make-styles-provider widget
+	
 	; 	if sym <> base [
 	; 		change-font widget face font sym
 	; 	]

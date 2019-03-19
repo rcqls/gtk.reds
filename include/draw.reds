@@ -242,10 +242,10 @@ OS2-draw-line: func [
 	x		[integer!]
 	y		[integer!]
 ][
-  dc: as draw-ctx! R/h? :count list list: list + 1 
+  dc: as draw-ctx! RV/h? :count list list: list + 1 
   until [
-	x: R/i? :count list list: list + 1
-	y: R/i? :count list list: list + 1
+	x: RV/i? :count list list: list + 1
+	y: RV/i? :count list list: list + 1
 	;;print ["line: count=" count " at "x "x" y lf ]
 	cairo_line_to dc/raw as float! x as float! y
 	zero? count
@@ -399,10 +399,10 @@ OS2-draw-polygon: func [                      ;-- native function
 	x		[integer!]
 	y		[integer!]
 ][
-  dc: as draw-ctx! R/h? :count list list: list + 1 
+  dc: as draw-ctx! RV/h? :count list list: list + 1 
   until [
-	x: R/i? :count list list: list + 1
-	y: R/i? :count list list: list + 1
+	x: RV/i? :count list list: list + 1
+	y: RV/i? :count list list: list + 1
 	;;print ["line: count=" count " at "x "x" y lf ]
 	cairo_line_to dc/raw as float! x as float! y
 	zero? count
@@ -524,17 +524,17 @@ OS2-draw-spline: func [
 		pos		[integer!]
 		closed? [logic!]
 ][
-	dc: as draw-ctx! R/h? :n l l: l + 1
+	dc: as draw-ctx! RV/h? :n l l: l + 1
 	if n = 4 [		;-- two points input
-		p1_x:  R/i? :n l l: l + 1
-		p1_y:  R/i? :n l l: l + 1
-		stop_x: R/i? :n l l: l + 1
-		stop_y: R/i? :n l l: l + 1
+		p1_x:  RV/i? :n l l: l + 1
+		p1_y:  RV/i? :n l l: l + 1
+		stop_x: RV/i? :n l l: l + 1
+		stop_y: RV/i? :n l l: l + 1
 		OS2-draw-line [dc p1_x p1_y stop_x stop_y]				;-- draw a line
 		exit
 	]
 
-	closed?: R/l? null l + n n: n - 1
+	closed?: RV/l? null l + n n: n - 1
 
 	ctx: dc/raw
 
@@ -1492,11 +1492,11 @@ OS2-draw-shape-line: func [
 	y		[integer!]
 	rel?	[logic!]
 ][
-  dc: as draw-ctx! R/h? :count list list: list + 1
-  rel?: R/l? :count list list: list + 1
+  dc: as draw-ctx! RV/h? :count list list: list + 1
+  rel?: RV/l? :count list list: list + 1
   until [
-	x: R/i? :count list list: list + 1
-	y: R/i? :count list list: list + 1
+	x: RV/i? :count list list: list + 1
+	y: RV/i? :count list list: list + 1
 	;;print ["line: count=" count " at "x "x" y lf ]
 	either rel? [
 		cairo_rel_line_to dc/raw as float! x as float! y
